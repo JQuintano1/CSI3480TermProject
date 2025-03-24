@@ -2,8 +2,8 @@
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user = $_POST['username'];
-    $userpassword = $_POST['password'];
-    
+    $userpassword = hash('sha512', $_POST['password']);
+
     try {
         require_once "databaseconnect.php";
 
