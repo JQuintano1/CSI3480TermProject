@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Secure Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #e8f5e9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .login-container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      width: 300px;
+      text-align: center;
+    }
+    h2 {
+      color: #388e3c;
+    }
+    .input-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #c8e6c9;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 10px;
+      width: 100%;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #388e3c;
+    }
+    .locked-message {
+      color: red;
+      font-size: 14px;
+      margin-top: 10px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Secure Login</h2>
+    <form id="loginForm">
+      <div class="input-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" value="user2" required />
+      </div>
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" value="password5" required />
+      </div>
+      <button type="submit" id="loginBtn">Login</button>
+      <p class="locked-message" id="lockedMessage">Too many failed attempts. Try again in 10 minutes.</p>
+    </form>
+  </div>
+
+  <script>
+
+    const MAX_ATTEMPTS = 3;
+    const LOCKOUT_TIME = 10 * 60 * 1000; // 10 minutes CD
+
+    const form = document.getElementById("loginForm");
+    const loginBtn = document.getElementById("loginBtn");
+    const lockedMsg = document.getElementById("lockedMessage");
+    const usernameInput = document.getElementById("username");
+    const passwordInput = document.getElementById("password");
+
+    function isLockedOut() {
+      const lockoutTime = localStorage.getItem("lockoutTime");
+      if (!lockoutTime) return false;
+      const now = Date.now();
+      if (now < parseInt(lockoutTime)) {
+        return true;
+      } else {
+        localStorage.removeItem("lockoutTime");
+        localStorage.removeItem("failedAttempts");
+        return false;
+      }
+    }
+
+    function updateLockStatus() {
+      if (isLockedOut()) {
+        loginBtn.disabled = true;
+        usernameInput.disabled = true;
+        passwordInput.disabled = true;
+        lockedMsg.style.display = "block";
+      } else {
+        loginBtn.disabled = false;
+        usernameInput.disabled = false;
+        passwordInput.disabled = false;
+        lockedMsg.style.display = "none";
+      }
+    }
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      if (isLockedOut()) {
+        updateLockStatus();
+        return;
+      }
+
+      const username = usernameInput.value;
+      const password = passwordInput.value;
+
+      if (username === "user2" && password === "password5") {
+        alert("You have successfully logged in!");
+        localStorage.removeItem("failedAttempts");
+        localStorage.removeItem("lockoutTime");
+      } else {
+        let attempts = parseInt(localStorage.getItem("failedAttempts")) || 0;
+        attempts++;
+        localStorage.setItem("failedAttempts", attempts);
+
+        if (attempts >= MAX_ATTEMPTS) {
+          const lockoutUntil = Date.now() + LOCKOUT_TIME;
+          localStorage.setItem("lockoutTime", lockoutUntil);
+          updateLockStatus();
+        } else {
+          alert(`Login failed. Attempt ${attempts} of ${MAX_ATTEMPTS}.`);
+        }
+      }
+    });
+
+    updateLockStatus();
+  </script>
+</body>
+</html>
